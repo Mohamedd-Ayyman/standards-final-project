@@ -233,7 +233,7 @@ export default function SOPPage() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <button
-                  onClick={handleDownload()}
+                  onClick={handleDownload}
                   className="px-8 py-4 bg-white text-teal-900 rounded-full font-semibold text-lg hover:bg-gray-100 transform hover:scale-105 transition-all duration-300 shadow-xl"
                 >
                   Download SOPs
