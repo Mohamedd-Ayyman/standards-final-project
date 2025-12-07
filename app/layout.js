@@ -1,5 +1,6 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import Link from "next/link";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -22,6 +23,98 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <nav className=" bg-black w-full flex relative justify-center items-center mx-auto px-8 h-20 text-2xl ">
+          <div className="flex-initial">
+            <div className="flex justify-end items-center relative">
+              <div className="flex mr-4 items-center">
+                <Link
+                  href="/"
+                  className="flex items-center relative cursor-pointer whitespace-nowrap inline-block py-2 px-3 hover:bg-gray-200 hover:text-black rounded-full"
+                >
+                  Home
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex-initial">
+            <div className="flex justify-end items-center relative">
+              <div className="flex mr-4 items-center">
+                <Link
+                  href="/framework"
+                  className="flex items-center relative cursor-pointer whitespace-nowrap inline-block py-2 px-3 hover:bg-gray-200 hover:text-black rounded-full"
+                >
+                  FRAMEWORK
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex-initial">
+            <div className="flex justify-end items-center relative">
+              <div className="flex mr-4 items-center">
+                <Link
+                  href="/standard-operating-procedures"
+                  className="flex items-center relative cursor-pointer whitespace-nowrap inline-block py-2 px-3 hover:bg-gray-200 hover:text-black rounded-full"
+                >
+                  SOPs
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex-initial">
+            <div className="flex justify-end items-center relative">
+              <div className="flex mr-4 items-center">
+                <Link
+                  href="/dashboard"
+                  className="flex items-center relative cursor-pointer whitespace-nowrap inline-block py-2 px-3 hover:bg-gray-200 hover:text-black rounded-full"
+                >
+                  DASHBOARD
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex-initial">
+            <div className="flex justify-end items-center relative">
+              <div className="flex mr-4 items-center">
+                <Link
+                  href="/challenges"
+                  className="flex items-center relative cursor-pointer whitespace-nowrap inline-block py-2 px-3 hover:bg-gray-200 hover:text-black rounded-full"
+                >
+                  CHALLENGES
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex-initial">
+            <div className="flex justify-end items-center relative">
+              <div className="flex mr-4 items-center">
+                <Link
+                  href="/document-control"
+                  className="flex items-center relative cursor-pointer whitespace-nowrap inline-block py-2 px-3 hover:bg-gray-200 hover:text-black rounded-full"
+                >
+                  Document Control
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex-initial">
+            <div className="flex justify-end items-center relative">
+              <div className="flex mr-4 items-center">
+                <Link
+                  href="/about"
+                  className="flex items-center relative cursor-pointer whitespace-nowrap inline-block py-2 px-3 hover:bg-gray-200 hover:text-black rounded-full"
+                >
+                  About
+                </Link>
+              </div>
+            </div>
+          </div>
+        </nav>
         {children}
       </body>
     </html>
