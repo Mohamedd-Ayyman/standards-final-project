@@ -23,7 +23,7 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <nav className=" bg-black w-full flex relative justify-center items-center mx-auto px-8 h-20 text-2xl ">
+        <nav className=" bg-black w-full flex relative justify-center items-center mx-auto px-8 h-20 text-xl ">
           <div className="flex-initial">
             <div className="flex justify-end items-center relative">
               <div className="flex mr-4 items-center">
