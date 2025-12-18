@@ -23,6 +23,7 @@ export default function ElectronicAuditForm() {
   });
 
   const [submitted, setSubmitted] = useState(false);
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
     const elements = contentRef.current?.querySelectorAll(".fadeUp");
@@ -40,6 +41,25 @@ export default function ElectronicAuditForm() {
     });
   }, []);
 
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!formData.department.trim()) {
+      newErrors.department = "Department is required";
+    }
+
+    if (!formData.auditorName.trim()) {
+      newErrors.auditorName = "Auditor name is required";
+    }
+
+    if (!formData.staffMember.trim()) {
+      newErrors.staffMember = "Staff member name is required";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleStepChange = (step) => {
     setFormData((prev) => ({
       ...prev,
@@ -51,22 +71,49 @@ export default function ElectronicAuditForm() {
   };
 
   const handleDownload = async () => {
-    const completedSteps = Object.values(formData.handHygieneSteps).filter(
-      Boolean
-    ).length;
-    const complianceRate = Math.round((completedSteps / 7) * 100);
+    if (!validateForm()) {
+      const firstError = Object.keys(errors)[0];
+      if (firstError) {
+        const element = document.getElementById(firstError);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "center" });
+          element.focus();
+        }
+      }
+      return;
+    }
 
-    const blob = await pdf(
-      <AuditPDF data={formData} complianceRate={complianceRate} />
-    ).toBlob();
+    try {
+      const completedSteps = Object.values(formData.handHygieneSteps).filter(
+        Boolean
+      ).length;
+      const complianceRate = Math.round((completedSteps / 7) * 100);
 
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "audit_report.pdf";
-    link.click();
-    URL.revokeObjectURL(url);
+      const blob = await pdf(
+        <AuditPDF data={formData} complianceRate={complianceRate} />
+      ).toBlob();
 
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `audit_report_${formData.department}_${
+        new Date().toISOString().split("T")[0]
+      }.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      setSubmitted(true);
+      setTimeout(() => setSubmitted(false), 3000);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      setErrors({ general: "Failed to generate PDF. Please try again." });
+    } finally {
+    }
+  };
+
+  const handleReset = () => {
     setFormData({
       department: "",
       auditorName: "",
@@ -83,6 +130,7 @@ export default function ElectronicAuditForm() {
       ppeUsed: [],
       observations: "",
     });
+    setErrors({});
   };
 
   const handlePPEChange = (item) => {
@@ -94,9 +142,11 @@ export default function ElectronicAuditForm() {
     }));
   };
 
-  const handleSubmit = () => {
-    setSubmitted(true);
-    setTimeout(() => setSubmitted(false), 3000);
+  const handleInputChange = (field, value) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: "" }));
+    }
   };
 
   const completedSteps = Object.values(formData.handHygieneSteps).filter(
@@ -131,6 +181,19 @@ export default function ElectronicAuditForm() {
             </p>
           </div>
 
+          {errors.general && (
+            <div className="fadeUp mb-8">
+              <div className="bg-red-500 bg-opacity-20 backdrop-blur-lg rounded-2xl p-6 border-2 border-red-400 border-opacity-30">
+                <div className="flex items-center gap-3 text-white">
+                  <span className="text-4xl">⚠️</span>
+                  <div>
+                    <p className="font-bold text-lg">{errors.general}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {submitted && (
             <div className="fadeUp mb-8">
               <div className="bg-green-500 bg-opacity-20 backdrop-blur-lg rounded-2xl p-6 border-2 border-green-400 border-opacity-30">
@@ -138,10 +201,10 @@ export default function ElectronicAuditForm() {
                   <span className="text-4xl">✓</span>
                   <div>
                     <p className="font-bold text-lg">
-                      Audit Submitted Successfully!
+                      PDF Report Generated Successfully!
                     </p>
                     <p className="text-sm opacity-80">
-                      Your audit has been recorded and sent to the ICD team.
+                      Your audit report has been downloaded.
                     </p>
                   </div>
                 </div>
@@ -154,21 +217,27 @@ export default function ElectronicAuditForm() {
               <div className="bg-[#2B624E] bg-opacity-20 backdrop-blur-lg rounded-3xl p-8 border border-white border-opacity-20">
                 <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
                   <span className="text-3xl">📋</span>
-                  Basic Information
+                  Basic Information <span className="text-red-400">*</span>
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
+                  <div id="department">
                     <label className="block text-white font-semibold mb-2">
-                      Department
+                      Department <span className="text-red-400">*</span>
                     </label>
                     <select
                       value={formData.department}
                       onChange={(e) =>
-                        setFormData({ ...formData, department: e.target.value })
+                        handleInputChange("department", e.target.value)
                       }
-                      className="w-full bg-[#2B624E] bg-opacity-10 backdrop-blur-sm border border-white border-opacity-20 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-teal-400 transition-all"
+                      className={`w-full bg-[#2B624E] bg-opacity-10 backdrop-blur-sm border rounded-xl px-4 py-3 text-white focus:outline-none focus:border-teal-400 transition-all ${
+                        errors.department
+                          ? "border-red-500"
+                          : "border-white border-opacity-20"
+                      }`}
                     >
-                      <option value="">Select Department</option>
+                      <option value="" disabled hidden>
+                        Select Department
+                      </option>
                       <option value="ICU">ICU</option>
                       <option value="Emergency">Emergency</option>
                       <option value="Surgery">Surgery</option>
@@ -176,40 +245,60 @@ export default function ElectronicAuditForm() {
                       <option value="Maternity">Maternity</option>
                       <option value="General Ward">General Ward</option>
                     </select>
+                    {errors.department && (
+                      <p className="text-red-400 text-sm mt-2 flex items-center gap-1">
+                        <span>⚠</span> {errors.department}
+                      </p>
+                    )}
                   </div>
-                  <div>
+
+                  <div id="auditorName">
                     <label className="block text-white font-semibold mb-2">
-                      Auditor Name
+                      Auditor Name <span className="text-red-400">*</span>
                     </label>
                     <input
                       type="text"
                       value={formData.auditorName}
                       onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          auditorName: e.target.value,
-                        })
+                        handleInputChange("auditorName", e.target.value)
                       }
-                      className="w-full bg-[#2B624E] bg-opacity-10 backdrop-blur-sm border border-white border-opacity-20 rounded-xl px-4 py-3 text-white placeholder-white placeholder-opacity-50 focus:outline-none focus:border-teal-400 transition-all"
+                      className={`w-full bg-[#2B624E] bg-opacity-10 backdrop-blur-sm border rounded-xl px-4 py-3 text-white placeholder-white placeholder-opacity-50 focus:outline-none focus:border-teal-400 transition-all ${
+                        errors.auditorName
+                          ? "border-red-500"
+                          : "border-white border-opacity-20"
+                      }`}
                       placeholder="Your name"
                     />
+                    {errors.auditorName && (
+                      <p className="text-red-400 text-sm mt-2 flex items-center gap-1">
+                        <span>⚠</span> {errors.auditorName}
+                      </p>
+                    )}
                   </div>
-                  <div className="md:col-span-2">
+
+                  <div className="md:col-span-2" id="staffMember">
                     <label className="block text-white font-semibold mb-2">
-                      Staff Member Being Audited
+                      Staff Member Being Audited{" "}
+                      <span className="text-red-400">*</span>
                     </label>
                     <input
                       type="text"
                       value={formData.staffMember}
                       onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          staffMember: e.target.value,
-                        })
+                        handleInputChange("staffMember", e.target.value)
                       }
-                      className="w-full bg-[#2B624E] bg-opacity-10 backdrop-blur-sm border border-white border-opacity-20 rounded-xl px-4 py-3 text-white placeholder-white placeholder-opacity-50 focus:outline-none focus:border-teal-400 transition-all"
+                      className={`w-full bg-[#2B624E] bg-opacity-10 backdrop-blur-sm border rounded-xl px-4 py-3 text-white placeholder-white placeholder-opacity-50 focus:outline-none focus:border-teal-400 transition-all ${
+                        errors.staffMember
+                          ? "border-red-500"
+                          : "border-white border-opacity-20"
+                      }`}
                       placeholder="Staff member name"
                     />
+                    {errors.staffMember && (
+                      <p className="text-red-400 text-sm mt-2 flex items-center gap-1">
+                        <span>⚠</span> {errors.staffMember}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -241,7 +330,11 @@ export default function ElectronicAuditForm() {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {[
-                    { key: "palmToPalm", label: "1. Palm to palm", icon: "🤲" },
+                    {
+                      key: "palmToPalm",
+                      label: "1. Palm to palm",
+                      icon: "🤲",
+                    },
                     {
                       key: "backOfHands",
                       label: "2. Back of hands",
@@ -338,12 +431,18 @@ export default function ElectronicAuditForm() {
               </div>
             </div>
 
-            <div className="fadeUp">
+            <div className="fadeUp flex justify-center gap-4">
               <button
                 onClick={handleDownload}
-                className="w-full bg-gradient-to-r from-teal-500 to-green-500 text-white rounded-2xl py-4 px-8 font-bold text-xl hover:from-teal-600 hover:to-green-600 transform hover:scale-105 transition-all duration-300 shadow-2xl"
+                className="bg-gradient-to-r from-teal-500 to-green-500 text-white rounded-2xl py-4 px-8 font-bold text-xl hover:from-teal-600 hover:to-green-600 transform hover:scale-105 transition-all duration-300 shadow-2xl"
               >
                 Download Audit Report
+              </button>
+              <button
+                onClick={handleReset}
+                className="bg-gradient-to-r from-teal-500 to-green-500 text-white rounded-2xl py-4 px-8 font-bold text-xl hover:from-teal-600 hover:to-green-600 transform hover:scale-105 transition-all duration-300 shadow-2xl"
+              >
+                Clear Form
               </button>
             </div>
           </div>
