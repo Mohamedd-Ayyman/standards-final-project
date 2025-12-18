@@ -1,14 +1,18 @@
 "use client";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { PDFDownloadLink } from "@react-pdf/renderer";
+import SOPPDF from "@/components/SOPPDF";
 
 gsap.registerPlugin(ScrollTrigger);
 
 export default function SOPPage() {
   const contentRef = useRef(null);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
     const elements = gsap.utils.toArray(".fadeUp");
 
     elements.forEach((elem) => {
@@ -106,37 +110,6 @@ export default function SOPPage() {
     },
   ];
 
-  const handleDownload = () => {
-    if (typeof window === "undefined") return;
-
-    let content = sops
-      .map((sop, index) => {
-        let itemsText = sop.items
-          ? sop.items.map((i) => `  - ${i}`).join("\n")
-          : "";
-        let colorItemsText = sop.colorItems
-          ? sop.colorItems.map((c) => `  - ${c.text}`).join("\n")
-          : "";
-        let noteText = sop.note ? `Note: ${sop.note}` : "";
-        return `${sop.title}\n${
-          sop.subtitle ? sop.subtitle + "\n" : ""
-        }${itemsText}${
-          colorItemsText ? "\n" + colorItemsText : ""
-        }\n${noteText}\n\n`;
-      })
-      .join("\n");
-
-    const blob = new Blob([content], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "SOPs.txt";
-    a.click();
-
-    URL.revokeObjectURL(url);
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-teal-900 to-green-900 relative overflow-hidden">
       <div className="absolute inset-0 overflow-hidden">
@@ -229,18 +202,20 @@ export default function SOPPage() {
                 Ready to Implement These SOPs?
               </h3>
               <p className="text-teal-100 text-lg mb-6 opacity-90">
-                Download the complete documentation and training materials
+                Download the complete documentation as pdf
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <button
-                  onClick={handleDownload}
-                  className="px-8 py-4 bg-white text-teal-900 rounded-full font-semibold text-lg hover:bg-gray-100 transform hover:scale-105 transition-all duration-300 shadow-xl"
-                >
-                  Download SOPs
-                </button>
-                <button className="px-8 py-4 bg-transparent text-white border-2 border-white rounded-full font-semibold text-lg hover:bg-white hover:text-teal-900 transform hover:scale-105 transition-all duration-300">
-                  View Training
-                </button>
+                {isClient && (
+                  <PDFDownloadLink
+                    document={<SOPPDF sops={sops} />}
+                    fileName="Infection_Control_SOPs.pdf"
+                    className="px-8 py-4 bg-white text-teal-900 rounded-full font-semibold text-lg hover:bg-gray-100 transform hover:scale-105 transition-all duration-300 shadow-xl"
+                  >
+                    {({ loading }) =>
+                      loading ? "Preparing PDF..." : "Download SOPs"
+                    }
+                  </PDFDownloadLink>
+                )}
               </div>
             </div>
           </div>
